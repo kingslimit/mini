@@ -23,8 +23,8 @@
 
                 <form onsubmit="return handleRegister(event)">
                     <div class="input-group">
-                        <label for="registerName">Nama Lengkap</label>
-                        <input type="text" id="registerName" placeholder="John Doe" required>
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" placeholder="username" required>
                     </div>
                     <div class="input-group">
                         <label for="registerEmail">Email</label>
@@ -45,17 +45,61 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
     <script>
-        function handleRegister(event) {
+        const API_URL = '/api';
+
+        async function handleRegister(event) {
             event.preventDefault();
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value;
 
-            // Simulasi register - redirect ke halaman utama
-            alert(`Registrasi berhasil!\nNama: ${name}\nEmail: ${email}`);
-            // window.location.href = 'index.html';
+            if (!username || !email || !password) {
+                showToast('⚠️ Semua field harus diisi!', 'warning');
+                return false;
+            }
+
+            if (password.length < 8) {
+                showToast('⚠️ Password minimal 8 karakter!', 'warning');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, email, password})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('✅ Registrasi berhasil! Silakan login', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } else {
+                    showToast('❌ ' + (data.msg || 'Registrasi gagal'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ Error koneksi ke server', 'error');
+            }
+
             return false;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
         }
     </script>
 </body>

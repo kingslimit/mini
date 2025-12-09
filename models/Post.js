@@ -28,6 +28,10 @@ const postSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	author: {
+		type: String,
+		required: true,
+	},
 	timestamp: {
 		type: Date,
 		default: Date.now,

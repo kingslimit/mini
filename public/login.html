@@ -23,8 +23,8 @@
 
                 <form onsubmit="return handleLogin(event)">
                     <div class="input-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" placeholder="nama@email.com" required>
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" placeholder="username" required>
                     </div>
                     <div class="input-group">
                         <label for="loginPassword">Password</label>
@@ -40,16 +40,55 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
     <script>
-        function handleLogin(event) {
+        const API_URL = '/api';
+
+        async function handleLogin(event) {
             event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+
+            const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
 
-            // Simulasi login - redirect ke halaman utama
-            alert(`Login berhasil!\nEmail: ${email}`);
-            // window.location.href = 'index.html';
+            if (!username || !password) {
+                showToast('⚠️ Username dan password harus diisi!', 'warning');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('✅ Login berhasil!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showToast('❌ ' + (data.msg || 'Login gagal'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ Error koneksi ke server', 'error');
+            }
+
             return false;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
         }
     </script>
 </body>

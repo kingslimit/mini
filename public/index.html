@@ -9,60 +9,25 @@
 </head>
 
 <body>
-    <!-- Navbar seperti Quora -->
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-left">
                 <h1 class="logo">QuoraClone</h1>
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="Cari pertanyaan...">
-                </div>
             </div>
-            <div class="nav-right">
-                <button class="nav-btn">Home</button>
-                <button class="nav-btn">Answer</button>
-                <button class="nav-btn">Spaces</button>
-                <div class="user-avatar">U</div>
+            <div class="nav-right" id="navRight">
+                <!-- Nav akan diubah berdasarkan status login -->
             </div>
         </div>
     </nav>
 
-    <div class="main-container">
-        <!-- Sidebar kiri -->
-        <aside class="sidebar-left">
-            <div class="sidebar-item active">
-                <span class="icon">➕</span>
-                <span>Buat Pertanyaan</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="icon">📝</span>
-                <span>Answer</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="icon">📊</span>
-                <span>Spaces</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="icon">📚</span>
-                <span>Following</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="icon">🔖</span>
-                <span>Bookmarks</span>
-            </div>
-            <div class="sidebar-item">
-                <span class="icon">📈</span>
-                <span>Your Stats</span>
-            </div>
-        </aside>
-
+    <div class="main-container" style="grid-template-columns: 1fr; max-width: 800px;">
         <!-- Content utama -->
         <main class="main-content">
-            <!-- Form Buat Pertanyaan -->
-            <div class="question-box">
+            <!-- Form Buat Pertanyaan (hanya untuk user login) -->
+            <div class="question-box" id="questionBox" style="display: none;">
                 <div class="question-header">
-                    <div class="user-avatar small">U</div>
+                    <div class="user-avatar small" id="userAvatar">U</div>
                     <input type="text" id="postTitle" class="question-input"
                         placeholder="Apa yang ingin Anda tanyakan atau bagikan?">
                 </div>
@@ -76,56 +41,11 @@
                 </div>
             </div>
 
-            <!-- Filter/Tabs -->
-            <div class="feed-tabs">
-                <button class="tab active">Untuk Anda</button>
-                <button class="tab">Mengikuti</button>
-                <button class="tab">Populer</button>
-            </div>
-
             <!-- Timeline Posts -->
             <div id="timeline" class="timeline">
                 <!-- Posts akan dimuat di sini -->
             </div>
         </main>
-
-        <!-- Sidebar kanan -->
-        <aside class="sidebar-right">
-            <div class="widget">
-                <h3>Spaces to follow</h3>
-                <div class="space-item">
-                    <div class="space-icon">💻</div>
-                    <div>
-                        <div class="space-name">Programming</div>
-                        <div class="space-members">1.2M members</div>
-                    </div>
-                    <button class="btn-follow">Follow</button>
-                </div>
-                <div class="space-item">
-                    <div class="space-icon">🎨</div>
-                    <div>
-                        <div class="space-name">Design</div>
-                        <div class="space-members">850K members</div>
-                    </div>
-                    <button class="btn-follow">Follow</button>
-                </div>
-                <div class="space-item">
-                    <div class="space-icon">📱</div>
-                    <div>
-                        <div class="space-name">Technology</div>
-                        <div class="space-members">2.1M members</div>
-                    </div>
-                    <button class="btn-follow">Follow</button>
-                </div>
-            </div>
-
-            <div class="widget">
-                <h3>Trending</h3>
-                <div class="trending-item">What is AI?</div>
-                <div class="trending-item">How to learn React?</div>
-                <div class="trending-item">Best programming language 2024</div>
-            </div>
-        </aside>
     </div>
 
     <!-- Toast Notification -->
@@ -133,6 +53,63 @@
 
     <script>
         const API_URL = '/api';
+        let currentUser = null;
+
+        // Check login status saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            loadPosts();
+        });
+
+        // Cek apakah user sudah login
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_URL}/auth/me`);
+                if (response.ok) {
+                    currentUser = await response.json();
+                    updateNavbar(true);
+                    document.getElementById('questionBox').style.display = 'block';
+                    document.getElementById('userAvatar').textContent = currentUser.username[0].toUpperCase();
+                } else {
+                    currentUser = null;
+                    updateNavbar(false);
+                    document.getElementById('questionBox').style.display = 'none';
+                }
+            } catch (error) {
+                currentUser = null;
+                updateNavbar(false);
+            }
+        }
+
+        // Update navbar berdasarkan status login
+        function updateNavbar(isLoggedIn) {
+            const navRight = document.getElementById('navRight');
+            if (isLoggedIn) {
+                navRight.innerHTML = `
+                    <span class="nav-btn" style="cursor: default;">${currentUser.username}</span>
+                    <button class="nav-btn" onclick="logout()">Logout</button>
+                `;
+            } else {
+                navRight.innerHTML = `
+                    <button class="nav-btn" onclick="window.location.href='login.html'">Login</button>
+                    <button class="nav-btn" onclick="window.location.href='register.html'">Daftar</button>
+                `;
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await fetch(`${API_URL}/auth/logout`, {method: 'POST'});
+                currentUser = null;
+                updateNavbar(false);
+                document.getElementById('questionBox').style.display = 'none';
+                showToast('✅ Logout berhasil!', 'success');
+                loadPosts();
+            } catch (error) {
+                showToast('❌ Error logout', 'error');
+            }
+        }
 
         // Show question body when input clicked
         document.getElementById('postTitle').addEventListener('focus', () => {
@@ -144,8 +121,6 @@
             document.getElementById('postContent').value = '';
             document.getElementById('questionBody').style.display = 'none';
         }
-
-        document.addEventListener('DOMContentLoaded', loadPosts);
 
         async function loadPosts() {
             try {
@@ -171,72 +146,86 @@
         function createPostElement(post) {
             const postDiv = document.createElement('div');
             postDiv.className = 'post-card';
+
+            // Cek apakah user adalah pemilik post
+            const isOwner = currentUser && post.author === currentUser.username;
+
             postDiv.innerHTML = `
-        <div class="post-author">
-          <div class="user-avatar small">A</div>
-          <div class="author-info">
-            <div class="author-name">Anonymous User</div>
-            <div class="post-time">${formatDate(post.timestamp)}</div>
-          </div>
-          <div class="post-menu">
-            <button class="menu-btn" onclick="showMenu(event, '${post._id}')">⋯</button>
-            <div class="dropdown-menu" id="menu-${post._id}">
-              <div class="menu-item" onclick="editPost('${post._id}')">✏️ Edit</div>
-              <div class="menu-item delete" onclick="deletePost('${post._id}')">🗑️ Hapus</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="post-content">
-          <h2 class="post-title">${post.title}</h2>
-          <p class="post-text">${post.content}</p>
-        </div>
-
-        <div class="post-stats">
-          <span>${post.likes} upvotes</span>
-          <span>·</span>
-          <span>${post.comments.length} jawaban</span>
-        </div>
-
-        <div class="post-actions">
-          <button class="action-btn" onclick="likePost('${post._id}')">
-            <span class="icon">⬆</span> Upvote
-          </button>
-          <button class="action-btn" onclick="toggleComments('${post._id}')">
-            <span class="icon">💬</span> Jawab
-          </button>
-          <button class="action-btn">
-            <span class="icon">↗️</span> Share
-          </button>
-        </div>
-
-        <div id="comments-${post._id}" class="comments-container" style="display: none;">
-          <div class="add-answer">
-            <div class="user-avatar small">U</div>
-            <div class="answer-input-group">
-              <input type="text" id="commentUser-${post._id}" placeholder="Nama Anda" class="name-input">
-              <textarea id="commentText-${post._id}" placeholder="Tulis jawaban Anda..." rows="3"></textarea>
-              <button onclick="addComment('${post._id}')" class="btn-submit-answer">Kirim Jawaban</button>
-            </div>
-          </div>
-
-          <div class="answers-list">
-            ${post.comments.map(comment => `
-              <div class="answer-card">
-                <div class="answer-header">
-                  <div class="user-avatar tiny">${comment.user[0].toUpperCase()}</div>
-                  <div class="answer-author">
-                    <div class="author-name">${comment.user}</div>
-                    <div class="answer-time">${formatDate(comment.timestamp)}</div>
-                  </div>
-                  <button class="delete-comment" onclick="deleteComment('${post._id}', '${comment._id}')">×</button>
+                <div class="post-author">
+                    <div class="user-avatar small">${post.author[0].toUpperCase()}</div>
+                    <div class="author-info">
+                        <div class="author-name">${post.author}</div>
+                        <div class="post-time">${formatDate(post.timestamp)}</div>
+                    </div>
+                    ${isOwner ? `
+                    <div class="post-menu">
+                        <button class="menu-btn" onclick="showMenu(event, '${post._id}')">⋯</button>
+                        <div class="dropdown-menu" id="menu-${post._id}">
+                            <div class="menu-item delete" onclick="deletePost('${post._id}')">🗑️ Hapus</div>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
-                <div class="answer-text">${comment.text}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+                
+                <div class="post-content">
+                    <h2 class="post-title">${post.title}</h2>
+                    <p class="post-text">${post.content}</p>
+                </div>
+
+                <div class="post-stats">
+                    <span>${post.likes} upvotes</span>
+                    <span>·</span>
+                    <span>${post.comments.length} jawaban</span>
+                </div>
+
+                <div class="post-actions">
+                    <button class="action-btn" onclick="likePost('${post._id}')">
+                        <span class="icon">⬆</span> Upvote
+                    </button>
+                    <button class="action-btn" onclick="toggleComments('${post._id}')">
+                        <span class="icon">💬</span> Jawab
+                    </button>
+                </div>
+
+                <div id="comments-${post._id}" class="comments-container" style="display: none;">
+                    ${currentUser ? `
+                    <div class="add-answer">
+                        <div class="user-avatar small">${currentUser.username[0].toUpperCase()}</div>
+                        <div class="answer-input-group">
+                            <textarea id="commentText-${post._id}" placeholder="Tulis jawaban Anda..." rows="3"></textarea>
+                            <button onclick="addComment('${post._id}')" class="btn-submit-answer">Kirim Jawaban</button>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="add-answer">
+                        <p style="text-align: center; color: #939598; padding: 20px;">
+                            <a href="login.html" style="color: #b92b27; text-decoration: none;">Login</a> untuk memberikan jawaban
+                        </p>
+                    </div>
+                    `}
+
+                    <div class="answers-list">
+                        ${post.comments.map(comment => {
+                const isCommentOwner = currentUser && comment.user === currentUser.username;
+                return `
+                            <div class="answer-card">
+                                <div class="answer-header">
+                                    <div class="user-avatar tiny">${comment.user[0].toUpperCase()}</div>
+                                    <div class="answer-author">
+                                        <div class="author-name">${comment.user}</div>
+                                        <div class="answer-time">${formatDate(comment.timestamp)}</div>
+                                    </div>
+                                    ${isCommentOwner ? `
+                                    <button class="delete-comment" onclick="deleteComment('${post._id}', '${comment._id}')">×</button>
+                                    ` : ''}
+                                </div>
+                                <div class="answer-text">${comment.text}</div>
+                            </div>
+                            `;
+            }).join('')}
+                    </div>
+                </div>
+            `;
             return postDiv;
         }
 
@@ -255,6 +244,11 @@
         });
 
         async function createPost() {
+            if (!currentUser) {
+                showToast('⚠️ Harus login terlebih dahulu!', 'warning');
+                return;
+            }
+
             const title = document.getElementById('postTitle').value.trim();
             const content = document.getElementById('postContent').value.trim();
 
@@ -274,30 +268,12 @@
                     showToast('✅ Pertanyaan berhasil diposting!', 'success');
                     cancelPost();
                     loadPosts();
+                } else {
+                    const error = await response.json();
+                    showToast('❌ ' + (error.message || 'Error membuat post'), 'error');
                 }
             } catch (error) {
                 showToast('❌ Error membuat post', 'error');
-            }
-        }
-
-        async function editPost(postId) {
-            const newTitle = prompt('Masukkan judul baru:');
-            const newContent = prompt('Masukkan konten baru:');
-            if (!newTitle || !newContent) return;
-
-            try {
-                const response = await fetch(`${API_URL}/posts/${postId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({title: newTitle, content: newContent})
-                });
-
-                if (response.ok) {
-                    showToast('✅ Post berhasil diupdate!', 'success');
-                    loadPosts();
-                }
-            } catch (error) {
-                showToast('❌ Error mengupdate post', 'error');
             }
         }
 
@@ -312,6 +288,8 @@
                 if (response.ok) {
                     showToast('✅ Post berhasil dihapus!', 'success');
                     loadPosts();
+                } else {
+                    showToast('❌ Gagal menghapus post', 'error');
                 }
             } catch (error) {
                 showToast('❌ Error menghapus post', 'error');
@@ -339,11 +317,15 @@
         }
 
         async function addComment(postId) {
-            const user = document.getElementById(`commentUser-${postId}`).value.trim();
+            if (!currentUser) {
+                showToast('⚠️ Harus login terlebih dahulu!', 'warning');
+                return;
+            }
+
             const text = document.getElementById(`commentText-${postId}`).value.trim();
 
-            if (!user || !text) {
-                showToast('⚠️ Nama dan jawaban harus diisi!', 'warning');
+            if (!text) {
+                showToast('⚠️ Jawaban harus diisi!', 'warning');
                 return;
             }
 
@@ -351,14 +333,16 @@
                 const response = await fetch(`${API_URL}/comments/${postId}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({user, text})
+                    body: JSON.stringify({text})
                 });
 
                 if (response.ok) {
                     showToast('✅ Jawaban berhasil ditambahkan!', 'success');
-                    document.getElementById(`commentUser-${postId}`).value = '';
                     document.getElementById(`commentText-${postId}`).value = '';
                     loadPosts();
+                } else {
+                    const error = await response.json();
+                    showToast('❌ ' + (error.message || 'Error menambahkan jawaban'), 'error');
                 }
             } catch (error) {
                 showToast('❌ Error menambahkan jawaban', 'error');
@@ -376,6 +360,8 @@
                 if (response.ok) {
                     showToast('✅ Jawaban berhasil dihapus!', 'success');
                     loadPosts();
+                } else {
+                    showToast('❌ Gagal menghapus jawaban', 'error');
                 }
             } catch (error) {
                 showToast('❌ Error menghapus jawaban', 'error');

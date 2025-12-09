@@ -2,8 +2,9 @@
 import { Router } from "express";
 const router = Router();
 import Post from "../models/Post.js";
+import auth from "../middleware/auth.js";
 
-// GET semua posts (dengan sorting berdasarkan timestamp terbaru)
+// GET semua posts (tanpa auth - public)
 router.get("/", async (req, res) => {
 	try {
 		const posts = await Post.find().sort({ timestamp: -1 }); // Sort descending
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// GET single post by ID
+// GET single post by ID (public)
 router.get("/:id", async (req, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
@@ -30,8 +31,8 @@ router.get("/:id", async (req, res) => {
 	}
 });
 
-// POST create new post
-router.post("/", async (req, res) => {
+// POST create new post (protected - harus login)
+router.post("/", auth, async (req, res) => {
 	try {
 		const { title, content } = req.body;
 
@@ -45,6 +46,7 @@ router.post("/", async (req, res) => {
 		const newPost = new Post({
 			title,
 			content,
+			author: req.session.user.username, // Ambil username dari session
 			timestamp: new Date(),
 			likes: 0,
 			comments: [],
@@ -59,20 +61,28 @@ router.post("/", async (req, res) => {
 	}
 });
 
-// PUT update post
-router.put("/:id", async (req, res) => {
+// PUT update post (protected - hanya owner)
+router.put("/:id", auth, async (req, res) => {
 	try {
 		const { title, content } = req.body;
+
+		const post = await Post.findById(req.params.id);
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
+
+		// Cek apakah user adalah owner
+		if (post.author !== req.session.user.username) {
+			return res
+				.status(403)
+				.json({ message: "Tidak punya akses untuk edit post ini" });
+		}
 
 		const updatedPost = await Post.findByIdAndUpdate(
 			req.params.id,
 			{ title, content },
-			{ new: true, runValidators: true }, // Return updated document
+			{ new: true, runValidators: true },
 		);
-
-		if (!updatedPost) {
-			return res.status(404).json({ message: "Post not found" });
-		}
 
 		res.json(updatedPost);
 	} catch (error) {
@@ -82,16 +92,23 @@ router.put("/:id", async (req, res) => {
 	}
 });
 
-// DELETE post
-router.delete("/:id", async (req, res) => {
+// DELETE post (protected - hanya owner)
+router.delete("/:id", auth, async (req, res) => {
 	try {
-		const deletedPost = await Post.findByIdAndDelete(req.params.id);
-
-		if (!deletedPost) {
+		const post = await Post.findById(req.params.id);
+		if (!post) {
 			return res.status(404).json({ message: "Post not found" });
 		}
 
-		res.json({ message: "Post deleted successfully", post: deletedPost });
+		// Cek apakah user adalah owner
+		if (post.author !== req.session.user.username) {
+			return res
+				.status(403)
+				.json({ message: "Tidak punya akses untuk hapus post ini" });
+		}
+
+		await Post.findByIdAndDelete(req.params.id);
+		res.json({ message: "Post deleted successfully" });
 	} catch (error) {
 		res
 			.status(500)
