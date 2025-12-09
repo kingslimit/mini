@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuoraClone - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-left-panel">
+            <h1>QuoraClone</h1>
+            <p>Tempat untuk bertanya, menjawab, dan berbagi pengetahuan. Bergabunglah dengan komunitas kami dan mulai
+                berdiskusi tentang topik yang Anda minati.</p>
+        </div>
+
+        <div class="auth-right-panel">
+            <div class="form-container active">
+                <h2 class="auth-title">Masuk</h2>
+                <p class="auth-subtitle">Selamat datang kembali!</p>
+
+                <form onsubmit="return handleLogin(event)">
+                    <div class="input-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" placeholder="nama@email.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Masukkan password" required>
+                    </div>
+                    <button type="submit" class="btn-auth">Masuk</button>
+                </form>
+
+                <div class="switch-form">
+                    Belum punya akun? <a href="register.html">Daftar sekarang</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Simulasi login - redirect ke halaman utama
+            alert(`Login berhasil!\nEmail: ${email}`);
+            // window.location.href = 'index.html';
+            return false;
+        }
+    </script>
+</body>
+
+</html>

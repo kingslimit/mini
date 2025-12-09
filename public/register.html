@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuoraClone - Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-left-panel">
+            <h1>QuoraClone</h1>
+            <p>Tempat untuk bertanya, menjawab, dan berbagi pengetahuan. Bergabunglah dengan komunitas kami dan mulai
+                berdiskusi tentang topik yang Anda minati.</p>
+        </div>
+
+        <div class="auth-right-panel">
+            <div class="form-container active">
+                <h2 class="auth-title">Daftar</h2>
+                <p class="auth-subtitle">Buat akun baru Anda</p>
+
+                <form onsubmit="return handleRegister(event)">
+                    <div class="input-group">
+                        <label for="registerName">Nama Lengkap</label>
+                        <input type="text" id="registerName" placeholder="John Doe" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" placeholder="nama@email.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" placeholder="Min. 8 karakter" required
+                            minlength="8">
+                    </div>
+                    <button type="submit" class="btn-auth">Daftar</button>
+                </form>
+
+                <div class="switch-form">
+                    Sudah punya akun? <a href="login.html">Masuk di sini</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            // Simulasi register - redirect ke halaman utama
+            alert(`Registrasi berhasil!\nNama: ${name}\nEmail: ${email}`);
+            // window.location.href = 'index.html';
+            return false;
+        }
+    </script>
+</body>
+
+</html>

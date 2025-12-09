@@ -1,98 +1,107 @@
 // routes/comments.js - CRUD untuk Comments (nested)
-const express = require('express');
-const router = express.Router();
-const Post = require('../models/Post');
+import { Router } from "express";
+const router = Router();
+import Post from "../models/Post.js";
+import auth from "../middleware/auth.js";
 
 // POST add comment to a post
-router.post('/:postId', async (req, res) => {
-  try {
-    const { user, text } = req.body;
-    
-    // Validasi input
-    if (!user || !text) {
-      return res.status(400).json({ message: 'User and text are required' });
-    }
+router.post("/:postId", auth, async (req, res) => {
+	try {
+		const { user, text } = req.body;
 
-    const post = await Post.findById(req.params.postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+		// Validasi input
+		if (!user || !text) {
+			return res.status(400).json({ message: "User and text are required" });
+		}
 
-    // Tambah comment baru ke array comments
-    const newComment = {
-      user,
-      text,
-      timestamp: new Date()
-    };
+		const post = await Post.findById(req.params.postId);
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
 
-    post.comments.push(newComment);
-    await post.save();
+		// Tambah comment baru ke array comments
+		const newComment = {
+			user,
+			text,
+			timestamp: new Date(),
+		};
 
-    res.status(201).json({ 
-      message: 'Comment added successfully', 
-      comment: post.comments[post.comments.length - 1] 
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error adding comment', error: error.message });
-  }
+		post.comments.push(newComment);
+		await post.save();
+
+		res.status(201).json({
+			message: "Comment added successfully",
+			comment: post.comments[post.comments.length - 1],
+		});
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error adding comment", error: error.message });
+	}
 });
 
 // GET all comments from a post
-router.get('/:postId', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+router.get("/:postId", async (req, res) => {
+	try {
+		const post = await Post.findById(req.params.postId);
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
 
-    res.json(post.comments);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching comments', error: error.message });
-  }
+		res.json(post.comments);
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error fetching comments", error: error.message });
+	}
 });
 
 // PUT update a comment
-router.put('/:postId/:commentId', async (req, res) => {
-  try {
-    const { text } = req.body;
-    
-    const post = await Post.findById(req.params.postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+router.put("/:postId/:commentId", auth, async (req, res) => {
+	try {
+		const { text } = req.body;
 
-    // Cari comment by ID
-    const comment = post.comments.id(req.params.commentId);
-    if (!comment) {
-      return res.status(404).json({ message: 'Comment not found' });
-    }
+		const post = await Post.findById(req.params.postId);
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
 
-    // Update comment text
-    comment.text = text;
-    await post.save();
+		// Cari comment by ID
+		const comment = post.comments.id(req.params.commentId);
+		if (!comment) {
+			return res.status(404).json({ message: "Comment not found" });
+		}
 
-    res.json({ message: 'Comment updated successfully', comment });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating comment', error: error.message });
-  }
+		// Update comment text
+		comment.text = text;
+		await post.save();
+
+		res.json({ message: "Comment updated successfully", comment });
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error updating comment", error: error.message });
+	}
 });
 
 // DELETE a comment
-router.delete('/:postId/:commentId', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+router.delete("/:postId/:commentId", auth, async (req, res) => {
+	try {
+		const post = await Post.findById(req.params.postId);
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
 
-    // Hapus comment by ID menggunakan pull
-    post.comments.pull(req.params.commentId);
-    await post.save();
+		// Hapus comment by ID menggunakan pull
+		post.comments.pull(req.params.commentId);
+		await post.save();
 
-    res.json({ message: 'Comment deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting comment', error: error.message });
-  }
+		res.json({ message: "Comment deleted successfully" });
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error deleting comment", error: error.message });
+	}
 });
 
-module.exports = router;
+export default router;
